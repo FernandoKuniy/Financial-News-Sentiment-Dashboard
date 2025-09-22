@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 export default function Home() {
+  const APP = process.env.NEXT_PUBLIC_APP_NAME ?? "FinSent";
   return (
     <div className="font-sans grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col items-center justify-center text-center py-8">
@@ -13,6 +14,8 @@ export default function Home() {
         <p className="text-lg sm:text-xl text-gray-300 mt-6 max-w-2xl leading-relaxed">
           Analyze market sentiment through real-time financial news and data insights
         </p>
+        
+        <h1 className="text-3xl font-bold">{APP}</h1>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
         <a
