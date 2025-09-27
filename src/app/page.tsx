@@ -13,9 +13,18 @@ interface NewsItem {
   publishedAt: string;
 }
 
-
 interface SentimentResponse {
   items: SentimentItem[];
+}
+
+// helpers to narrow types
+function isErrorItem(s: SentimentItem | undefined): s is { error: string } {
+  return !!s && "error" in s;
+}
+function isOKItem(
+  s: SentimentItem | undefined
+): s is { label: "positive" | "neutral" | "negative"; score: number } {
+  return !!s && !("error" in s);
 }
 
 export default function Home() {
@@ -23,25 +32,28 @@ export default function Home() {
   const [query, setQuery] = useState("AAPL");
 
   // News
-  const { data: news, isLoading: newsLoading, error: newsErr } = useSWR<
-    { items: NewsItem[]; count: number }
-  >(query ? `/api/news?q=${encodeURIComponent(query)}&limit=25` : null, fetcher, {
-    revalidateOnFocus: false,
-  });
+  const {
+    data: news,
+    isLoading: newsLoading,
+    error: newsErr,
+  } = useSWR<{ items: NewsItem[]; count: number }>(
+    query ? `/api/news?q=${encodeURIComponent(query)}&limit=25` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
 
   // Sentiment
   const titles: string[] = news?.items?.map((n) => n.title) ?? [];
   const { data: sent, isLoading: sentLoading } = useSentiment(titles);
 
   const dist = useMemo(() => {
-    return sent?.items?.reduce(
-      (acc, s) => {
-        if ('error' in s) acc.errors++;
-        else acc[s.label]++;
-        return acc;
-      },
-      { positive: 0, neutral: 0, negative: 0, errors: 0 }
-    ) ?? { positive: 0, neutral: 0, negative: 0, errors: 0 };
+    const base = { positive: 0, neutral: 0, negative: 0, errors: 0 };
+    const items = sent?.items ?? [];
+    for (const s of items) {
+      if (isErrorItem(s)) base.errors++;
+      else base[s.label]++;
+    }
+    return base;
   }, [sent]);
 
   return (
@@ -78,19 +90,26 @@ export default function Home() {
             <p className="opacity-70">Loading…</p>
           )}
           <ul className="space-y-2">
-            {news?.items?.map((n, i) => {
+            {(news?.items ?? []).map((n, i) => {
               const s = sent?.items?.[i];
-              const badge =
-                s && 'error' in s
-                  ? "bg-gray-700"
-                  : s?.label === "positive"
-                  ? "bg-green-700"
-                  : s?.label === "negative"
-                  ? "bg-red-700"
-                  : "bg-yellow-700";
 
-              const text = s && 'error' in s ? "error" : s?.label ?? "pending";
-              const score = s && "error" in s ? "" : ` (${(s as {score:number}).score.toFixed(2)})`;
+              const badge = isErrorItem(s)
+                ? "bg-gray-700"
+                : isOKItem(s) && s.label === "positive"
+                ? "bg-green-700"
+                : isOKItem(s) && s.label === "negative"
+                ? "bg-red-700"
+                : "bg-yellow-700";
+
+              const text = isErrorItem(s)
+                ? "error"
+                : isOKItem(s)
+                ? s.label
+                : "pending";
+
+              const score = isOKItem(s)
+                ? ` (${s.score.toFixed(2)})`
+                : "";
 
               return (
                 <li
