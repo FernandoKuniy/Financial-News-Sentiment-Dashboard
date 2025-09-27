@@ -78,4 +78,6 @@ export async function GET(req: NextRequest) {
     const status = /HTTP 429/.test(msg) ? 429 : 500;
     return Response.json({ error: msg }, { status });
   }
+
+  //testing openai connector
 }
