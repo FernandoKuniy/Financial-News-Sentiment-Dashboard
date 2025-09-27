@@ -10,86 +10,70 @@ const mapFinBertLabel = (raw: string): SentLabel =>
   : raw.toLowerCase().includes("neu") ? "neutral"
   : "negative";
 
-type HFResp = Array<Array<{ label: string; score: number }>>;
+type OneResp = Array<{ label: string; score: number }>;
 
-function sleep(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit,
-  timeoutMs: number
-): Promise<Response> {
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
-  try {
-    const res = await fetch(input, { ...init, signal: ctrl.signal });
-    return res;
-  } finally {
-    clearTimeout(t);
-  }
+  try { return await fetch(input, { ...init, signal: ctrl.signal }); }
+  finally { clearTimeout(t); }
 }
 
-async function callHF(
-  inputs: string[],
-  opts: { timeoutMs?: number; attempts?: number; baseDelayMs?: number } = {}
-): Promise<SentItem[]> {
-  const timeoutMs = opts.timeoutMs ?? 15_000;
-  const attempts = opts.attempts ?? 3;
-  const baseDelayMs = opts.baseDelayMs ?? 400;
-
-  const body = JSON.stringify({ inputs });
+async function classifyOne(
+  text: string,
+  { timeoutMs = 10_000, attempts = 2, baseDelayMs = 300 }: { timeoutMs?: number; attempts?: number; baseDelayMs?: number } = {}
+): Promise<SentItem> {
   const headers = {
     "content-type": "application/json",
     authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY ?? ""}`,
   };
-
   let lastErr = "unknown error";
+
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetchWithTimeout(HF_URL, { method: "POST", headers, body }, timeoutMs);
-
-      // Warmup / loading
-      if (res.status === 503) {
-        lastErr = `HF 503: ${await res.text()}`;
-      } else if (res.status === 429) {
-        lastErr = `HF 429: ${await res.text()}`;
-      } else if (res.status === 401 || res.status === 403) {
-        lastErr = `HF ${res.status}: ${await res.text()}`;
-        break; // auth won’t improve with retries
-      } else if (!res.ok) {
-        lastErr = `HF ${res.status}: ${await res.text()}`;
-      } else {
-        const data: HFResp = await res.json();
-        // FinBERT returns array of arrays; choose max score per input
-        return data.map((arr) => {
-          if (!Array.isArray(arr) || arr.length === 0) return { error: "empty inference result" };
-          const best = arr.reduce((a, b) => (a.score >= b.score ? a : b));
-          return { label: mapFinBertLabel(best.label), score: best.score };
-        });
+      const res = await fetchWithTimeout(
+        HF_URL,
+        { method: "POST", headers, body: JSON.stringify({ inputs: text, parameters: { return_all_scores: true } }) },
+        timeoutMs
+      );
+      if (res.status === 401 || res.status === 403) return { error: `HF ${res.status}: ${await res.text()}` };
+      if (res.status === 429 || res.status === 503) { lastErr = `HF ${res.status}: ${await res.text()}`; }
+      else if (!res.ok) { lastErr = `HF ${res.status}: ${await res.text()}`; }
+      else {
+        const arr: unknown = await res.json();
+        if (!Array.isArray(arr)) return { error: "unexpected HF shape" };
+        const candidates = arr as OneResp; // single input → single array
+        if (candidates.length === 0) return { error: "empty inference result" };
+        const best = candidates.reduce((a, b) => (a.score >= b.score ? a : b));
+        return { label: mapFinBertLabel(best.label), score: best.score };
       }
-    } catch (e: unknown) {
-      lastErr = e instanceof Error ? e.message : String(e);
+    } catch (e) {
+      lastErr = e instanceof Error && e.name === "AbortError" ? "timeout" : String(e);
     }
-
-    // backoff with jitter
-    const delay = baseDelayMs * 2 ** i + Math.floor(Math.random() * 100);
-    await sleep(delay);
+    await sleep(baseDelayMs * 2 ** i);
   }
-
-  // All attempts failed -> return errors for each input
-  return inputs.map(() => ({ error: lastErr }));
+  return { error: lastErr };
 }
 
-export async function batchClassify(texts: string[], batchSize = 16): Promise<SentItem[]> {
-  const out: SentItem[] = [];
-  for (let i = 0; i < texts.length; i += batchSize) {
-    const slice = texts.slice(i, i + batchSize);
-    const res = await callHF(slice);
-    out.push(...res); // partial failures produce {error} entries, successes preserved
-  }
+// limit parallelism to avoid rate limits
+async function pMap<T, R>(items: T[], fn: (t: T) => Promise<R>, concurrency = 6): Promise<R[]> {
+  const out: R[] = Array(items.length) as unknown as R[];
+  let i = 0;
+  const workers = Array(Math.min(concurrency, items.length)).fill(0).map(async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx]);
+    }
+  });
+  await Promise.all(workers);
   return out;
+}
+
+export async function batchClassify(texts: string[], _batchSize = 16): Promise<SentItem[]> {
+  // per-input requests with concurrency; guarantees 1:1 outputs
+  return pMap(texts, (t) => classifyOne(t), 6);
 }
 
 export { mapFinBertLabel };
