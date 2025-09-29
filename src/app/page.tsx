@@ -7,6 +7,7 @@ import type { AnalyzeResponse } from "@/types/sentiment";
 import SearchBar from "@/components/search-bar";
 import { SummaryCards, SummaryHelp } from "@/components/summary-cards";
 import HeadlinesList from "@/components/headlines-list";
+import { LoadingState, ErrorState } from "@/components/state";
 
 export default function Page() {
   const params = useSearchParams();
@@ -15,9 +16,10 @@ export default function Page() {
   const { data, error, isLoading, mutate } = useSWR<AnalyzeResponse>(
     q ? `/api/analyze?q=${encodeURIComponent(q)}` : null,
     jsonFetcher,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+    }
   );
-
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
@@ -32,43 +34,35 @@ export default function Page() {
       )}
 
       {q && (
-        <>
-          <section aria-live="polite" className="space-y-3">
-            {isLoading && (
-              <div className="animate-pulse">
-                <div className="h-24 rounded-2xl bg-slate-100 mb-3" />
-                <div className="h-40 rounded-2xl bg-slate-100" />
+        <section aria-live="polite" className="space-y-3">
+          {isLoading && <LoadingState />}
+
+          {error && (
+            <ErrorState
+              message={error.message || "Unexpected error"}
+              onRetry={() => mutate()}
+              query={q}
+            />
+          )}
+
+          {data && !error && !isLoading && (
+            <>
+              <SummaryCards s={data.summary} />
+              <SummaryHelp />
+              <HeadlinesList items={data.articles} />
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => mutate()}
+                  className="text-xs underline text-slate-600 hover:text-slate-900"
+                  aria-label="Refresh results"
+                >
+                  Refresh
+                </button>
               </div>
-            )}
-
-            {error && (
-              <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                Failed to load analysis for “{q}”. {error.message}
-              </div>
-            )}
-
-            {data && (
-              <>
-                <SummaryCards s={data.summary} />
-                <SummaryHelp />
-                <HeadlinesList items={data.articles} />
-              </>
-            )}
-          </section>
-
-          <div className="flex gap-2">
-            {data && (
-              <button
-                type="button"
-                onClick={() => mutate()}
-                className="text-xs underline text-slate-600 hover:text-slate-900"
-                aria-label="Refresh results"
-              >
-                Refresh
-              </button>
-            )}
-          </div>
-        </>
+            </>
+          )}
+        </section>
       )}
     </main>
   );
