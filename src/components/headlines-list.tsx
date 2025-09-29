@@ -39,10 +39,11 @@ export default function HeadlinesList({ items }: { items: Article[] }) {
             </a>
             <Badge
               className={`border ${sentimentColor(a.sentiment.label)} shrink-0`}
-              aria-label={`Sentiment ${a.sentiment.label} score ${formatScore(a.sentiment.score)}`}
+              aria-label={`Sentiment ${a.sentiment.label}, score ${formatScore(a.sentiment.score)}`}
             >
               {a.sentiment.label}
             </Badge>
+
           </div>
           <div className="text-xs text-slate-600 flex items-center gap-2">
             <span>{a.source}</span>

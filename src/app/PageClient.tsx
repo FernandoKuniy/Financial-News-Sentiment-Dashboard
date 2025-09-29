@@ -7,6 +7,7 @@ import type { AnalyzeResponse } from "@/types/sentiment";
 import SearchBar from "@/components/search-bar";
 import { SummaryCards, SummaryHelp } from "@/components/summary-cards";
 import HeadlinesList from "@/components/headlines-list";
+import SentimentPie from "@/components/sentiment-pie";
 import { LoadingState, ErrorState } from "@/components/state";
 
 export default function PageClient() {
@@ -16,8 +17,12 @@ export default function PageClient() {
   const { data, error, isLoading, mutate } = useSWR<AnalyzeResponse>(
     q ? `/api/analyze?q=${encodeURIComponent(q)}` : null,
     jsonFetcher,
-    { revalidateOnFocus: false }
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 120000, // 2 minutes
+    }
   );
+  
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
@@ -41,6 +46,7 @@ export default function PageClient() {
             <>
               <SummaryCards s={data.summary} />
               <SummaryHelp />
+              <SentimentPie s={data.summary} />
               <HeadlinesList items={data.articles} />
               <div className="flex gap-2 pt-1">
                 <button
