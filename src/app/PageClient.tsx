@@ -9,6 +9,7 @@ import { SummaryCards, SummaryHelp } from "@/components/summary-cards";
 import HeadlinesList from "@/components/headlines-list";
 import SentimentPie from "@/components/sentiment-pie";
 import { LoadingState, ErrorState } from "@/components/state";
+import { useEffect, useState } from "react";
 
 export default function PageClient() {
   const params = useSearchParams();
@@ -22,6 +23,22 @@ export default function PageClient() {
       refreshInterval: 120000, // 2 minutes
     }
   );
+
+  function LastUpdated() {
+    const [time, setTime] = useState<string | null>(null);
+  
+    useEffect(() => {
+      setTime(new Date().toLocaleTimeString());
+    }, []);
+  
+    if (!time) return null; // render nothing until mounted
+  
+    return (
+      <div className="text-xs text-slate-500">
+        Last updated: {time}
+      </div>
+    );
+  }
   
 
   return (
@@ -46,6 +63,7 @@ export default function PageClient() {
             <>
               <SummaryCards s={data.summary} />
               <SummaryHelp />
+              <LastUpdated />
               <SentimentPie s={data.summary} />
               <HeadlinesList items={data.articles} />
               <div className="flex gap-2 pt-1">
