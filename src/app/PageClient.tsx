@@ -12,6 +12,7 @@ import { LoadingState, ErrorState } from "@/components/state";
 import { useEffect, useState } from "react";
 import type { PriceResponse } from "@/types/price";
 import PriceMiniChart from "@/components/price-mini-chart";
+import SentimentPriceChart from "@/components/sentiment-price-chart";
 
 export default function PageClient() {
   const params = useSearchParams();
@@ -75,11 +76,10 @@ export default function PageClient() {
               <SummaryHelp />
               <LastUpdated />
               <SentimentPie s={data.summary} />
-              {price?.items?.length ? (
-                <section aria-label="Price (last 7d)">
-                  <PriceMiniChart items={price.items} />
-                </section>
-              ) : null}
+              <section aria-label="Sentiment vs Price">
+                <SentimentPriceChart articles={data.articles} prices={price?.items ?? []} />
+              </section>
+
               <HeadlinesList items={data.articles} />
               <div className="flex gap-2 pt-1">
                 <button

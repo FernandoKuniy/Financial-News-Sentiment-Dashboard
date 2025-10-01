@@ -12,8 +12,8 @@ export default function PriceMiniChart({ items }: { items: PricePoint[] }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" hide />
           <YAxis domain={["auto", "auto"]} width={40} />
-          <Tooltip formatter={(v: number) => v.toFixed(2)} labelFormatter={(d) => `Date: ${d}`}labelStyle={{ color: "#2563eb" }} />
-          <Line type="monotone" dataKey="close" dot={false} />
+          <Tooltip formatter={(v: number) => v.toFixed(2)} labelFormatter={(d) => `Date: ${d}`} labelStyle={{ color: "#374151" }} />
+          <Line type="monotone" dataKey="close" dot={false} stroke="#1f77b4" />
         </LineChart>
       </ResponsiveContainer>
     </div>
