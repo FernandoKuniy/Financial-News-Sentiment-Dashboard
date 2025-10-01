@@ -1,0 +1,77 @@
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { getJSON } from "@/lib/http";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const QuerySchema = z.object({
+  q: z.string().min(1),
+  range: z.enum(["7d", "14d", "30d"]).default("7d"),
+});
+
+const SeriesSchema = z.record(
+  z.string(),
+  z.object({
+    "4. close": z.string(),
+  })
+);
+
+const AvDailySchema = z.object({
+  "Time Series (Daily)": SeriesSchema,
+}).passthrough();
+
+function daysFromRange(r: "7d" | "14d" | "30d") {
+  return r === "7d" ? 7 : r === "14d" ? 14 : 30;
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const params = QuerySchema.safeParse({
+      q: req.nextUrl.searchParams.get("q"),
+      range: (req.nextUrl.searchParams.get("range") as "7d" | "14d" | "30d") ?? undefined,
+    });
+    if (!params.success) return Response.json({ error: "Missing or invalid query" }, { status: 400 });
+
+    if (!process.env.ALPHAVANTAGE_KEY) {
+      return Response.json({ error: "Server missing ALPHAVANTAGE_KEY" }, { status: 500 });
+    }
+
+    const { q, range } = params.data;
+
+    const url = new URL("https://www.alphavantage.co/query");
+    url.searchParams.set("function", "TIME_SERIES_DAILY");
+    url.searchParams.set("symbol", q);
+    url.searchParams.set("outputsize", "compact");
+    url.searchParams.set("apikey", process.env.ALPHAVANTAGE_KEY);
+
+    const raw = await getJSON<Record<string, unknown>>(url.toString());
+
+    if (raw?.Note) return Response.json({ error: "Alpha Vantage rate limit" }, { status: 429 });
+    if (raw?.["Error Message"]) return Response.json({ error: "Invalid symbol" }, { status: 400 });
+
+    const parsed = AvDailySchema.safeParse(raw);
+    if (!parsed.success) {
+      return Response.json({ q, range, items: [] });
+    }
+
+    const series = parsed.data["Time Series (Daily)"];
+    const days = daysFromRange(range);
+    const start = new Date();
+    start.setUTCDate(start.getUTCDate() - (days - 1));
+    const cutoff = start.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const items = Object.entries(series)
+      .filter(([date]) => date >= cutoff)
+      .map(([date, v]) => ({
+        date,
+        close: Number((v as { "4. close": string })["4. close"]) || 0,
+      }))
+      .filter(p => Number.isFinite(p.close))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return Response.json({ q, range, items });
+  } catch (e) {
+    return Response.json({ error: String(e) }, { status: 500 });
+  }
+}

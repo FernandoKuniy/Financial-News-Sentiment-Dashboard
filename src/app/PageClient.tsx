@@ -10,6 +10,8 @@ import HeadlinesList from "@/components/headlines-list";
 import SentimentPie from "@/components/sentiment-pie";
 import { LoadingState, ErrorState } from "@/components/state";
 import { useEffect, useState } from "react";
+import type { PriceResponse } from "@/types/price";
+import PriceMiniChart from "@/components/price-mini-chart";
 
 export default function PageClient() {
   const params = useSearchParams();
@@ -22,6 +24,14 @@ export default function PageClient() {
       revalidateOnFocus: false,
       refreshInterval: 120000, // 2 minutes
     }
+  );
+
+  const looksLikeTicker = (s: string) => /^[A-Z.\-]{1,6}$/.test(s);
+  const range = "7d";
+  const { data: price } = useSWR<PriceResponse>(
+    q && looksLikeTicker(q) ? `/api/price?q=${encodeURIComponent(q)}&range=${range}` : null,
+    jsonFetcher,
+    { revalidateOnFocus: false }
   );
 
   function LastUpdated() {
@@ -65,6 +75,11 @@ export default function PageClient() {
               <SummaryHelp />
               <LastUpdated />
               <SentimentPie s={data.summary} />
+              {price?.items?.length ? (
+                <section aria-label="Price (last 7d)">
+                  <PriceMiniChart items={price.items} />
+                </section>
+              ) : null}
               <HeadlinesList items={data.articles} />
               <div className="flex gap-2 pt-1">
                 <button
