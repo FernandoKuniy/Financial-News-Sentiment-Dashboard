@@ -56,19 +56,15 @@ export async function GET(req: NextRequest) {
     }
 
     const series = parsed.data["Time Series (Daily)"];
-    const days = daysFromRange(range);
-    const start = new Date();
-    start.setUTCDate(start.getUTCDate() - (days - 1));
-    const cutoff = start.toISOString().slice(0, 10); // YYYY-MM-DD
-
+    const want = range === "7d" ? 7 : range === "14d" ? 14 : 30;
     const items = Object.entries(series)
-      .filter(([date]) => date >= cutoff)
       .map(([date, v]) => ({
         date,
-        close: Number((v as { "4. close": string })["4. close"]) || 0,
+        close: Number(v["4. close"]) || 0,
       }))
       .filter(p => Number.isFinite(p.close))
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-want);
 
     return Response.json({ q, range, items });
   } catch (e) {
