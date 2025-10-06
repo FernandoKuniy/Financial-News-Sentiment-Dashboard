@@ -116,12 +116,14 @@ async function classifyChunk(origin: string, chunk: string[]) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ headlines: chunk }),
   });
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`sentiment failed: ${txt}`);
-  }
+  if (!res.ok) throw new Error(`sentiment failed: ${await res.text().catch(()=> "")}`);
+
   const json = (await res.json()) as { items: SentItem[] };
-  return json.items || [];
+  const items = json.items || [];
+  if (items.length !== chunk.length) {
+    return Array.from({ length: chunk.length }, (_, i) => items[i] ?? ({ error: "missing" } as SentErr));
+  }
+  return items;
 }
 
 // classify all headlines in chunks of ≤64, preserving order
@@ -163,6 +165,9 @@ export async function GET(req: NextRequest) {
       let sentiment: SentItem[] = [];
       if (headlines.length) {
         sentiment = await classifyAll(origin, headlines, 64);
+        if (sentiment.length !== headlines.length) {
+          console.warn("analyze: sentiment misalignment", { in: headlines.length, out: sentiment.length });
+        }
       }
     
       // If no headlines, return empty summary early
@@ -218,6 +223,9 @@ export async function GET(req: NextRequest) {
     let sentiment: SentItem[] = [];
     if (headlines.length) {
       sentiment = await classifyAll(origin, headlines, 64);
+      if (sentiment.length !== headlines.length) {
+        console.warn("analyze: sentiment misalignment", { in: headlines.length, out: sentiment.length });
+      }
     }
 
     const perDayJoined = new Map<string, (NewsItem & { sentiment?: SentOK })[]>();
