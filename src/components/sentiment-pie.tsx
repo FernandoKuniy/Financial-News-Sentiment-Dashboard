@@ -18,7 +18,7 @@ export default function SentimentPie({ s }: { s: AnalyzeSummary }) {
   ].map((d) => ({ ...d, percent: Math.round((d.value / total) * 100) }));
 
   return (
-    <div className="w-full h-64">
+    <div className="w-full h-64 rounded-2xl border border-slate-800 bg-slate-900 p-4">
       <ResponsiveContainer>
         <PieChart>
           <Pie
@@ -29,12 +29,16 @@ export default function SentimentPie({ s }: { s: AnalyzeSummary }) {
             cy="50%"
             outerRadius={80}
             label={({ name, percent }) => `${name} (${percent}%)`}
+            labelStyle={{ fill: "#e5e7eb", fontSize: 12 }}
           >
             {data.map((entry, idx) => (
               <Cell key={entry.name} fill={COLORS[idx]} />
             ))}
           </Pie>
-          <Tooltip formatter={(v: number, name) => [`${v}`, name]} />
+          <Tooltip 
+            formatter={(v: number, name) => [`${v}`, name]} 
+            contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", color: "#e5e7eb" }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>

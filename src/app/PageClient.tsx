@@ -8,10 +8,10 @@ import SearchBar from "@/components/search-bar";
 import { SummaryCards, SummaryHelp } from "@/components/summary-cards";
 import HeadlinesList from "@/components/headlines-list";
 import SentimentPie from "@/components/sentiment-pie";
-import { LoadingState, ErrorState } from "@/components/state";
+import { ErrorState } from "@/components/state";
+import { EnhancedLoading } from "@/components/enhanced-loading";
 import { useEffect, useState } from "react";
 import type { PriceResponse } from "@/types/price";
-import PriceMiniChart from "@/components/price-mini-chart";
 import SentimentPriceChart from "@/components/sentiment-price-chart";
 
 export default function PageClient() {
@@ -45,7 +45,7 @@ export default function PageClient() {
     if (!time) return null; // render nothing until mounted
   
     return (
-      <div className="text-xs text-slate-500">
+      <div className="text-xs text-slate-400">
         Last updated: {time}
       </div>
     );
@@ -54,15 +54,15 @@ export default function PageClient() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Financial News Sentiment</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-slate-100">Financial News Sentiment</h1>
 
       <SearchBar />
 
-      {!q && <p className="text-sm text-slate-600">Enter a ticker or topic to analyze recent headlines.</p>}
+      {!q && <p className="text-sm text-slate-400">Enter a ticker or topic to analyze recent headlines.</p>}
 
       {q && (
         <section aria-live="polite" className="space-y-3">
-          {isLoading && <LoadingState />}
+          {isLoading && <EnhancedLoading query={q} />}
           {error && (
             <ErrorState
               message={error.message || "Unexpected error"}
@@ -85,7 +85,7 @@ export default function PageClient() {
                 <button
                   type="button"
                   onClick={() => mutate()}
-                  className="text-xs underline text-slate-600 hover:text-slate-900"
+                  className="text-xs underline text-slate-400 hover:text-slate-200"
                   aria-label="Refresh results"
                 >
                   Refresh

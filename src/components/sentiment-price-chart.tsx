@@ -86,15 +86,15 @@ export default function SentimentPriceChart({
   if (!prices?.length) return null;
 
   return (
-    <section aria-label={title} className="rounded-2xl border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-medium text-slate-700 mb-2">{title} <span className="text-xs text-slate-500">(3‑day rolling sentiment)</span></h2>
+    <section aria-label={title} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+      <h2 className="text-sm font-medium text-slate-300 mb-2">{title} <span className="text-xs text-slate-400">(3‑day rolling sentiment)</span></h2>
       <div className="w-full h-72">
         <ResponsiveContainer>
           <ComposedChart data={data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" tick={{ fontSize: 11 }} minTickGap={16} />
-            <YAxis yAxisId="left" domain={["auto", "auto"]} width={48} tick={{ fontSize: 11 }} />
-            <YAxis yAxisId="right" orientation="right" domain={[-1, 1]} width={40} tick={{ fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#9ca3af" }} minTickGap={16} />
+            <YAxis yAxisId="left" domain={["auto", "auto"]} width={48} tick={{ fontSize: 11, fill: "#9ca3af" }} />
+            <YAxis yAxisId="right" orientation="right" domain={[-1, 1]} width={40} tick={{ fontSize: 11, fill: "#9ca3af" }} />
             <Tooltip
               formatter={(v, _name, entry) => {
                 const key = (entry as { dataKey?: unknown } | undefined)?.dataKey;
@@ -103,9 +103,10 @@ export default function SentimentPriceChart({
                 if (key === "sentiment3") return [val, "Sentiment (3d)"];
                 return [val, "Sentiment (daily)"];
               }}
-              labelStyle={{ color: "#374151" }}
+              labelStyle={{ color: "#e5e7eb" }}
+              contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", color: "#e5e7eb" }}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: "#e5e7eb" }} />
             {/* Price line on left axis */}
             <Line yAxisId="left" type="monotone" dataKey="price" dot={false} name="Close" stroke="#1f77b4" />
             {/* Sentiment bar (daily avg) for context */}
@@ -115,7 +116,7 @@ export default function SentimentPriceChart({
           </ComposedChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-2 text-xs text-slate-600">Right axis: sentiment in [−1, 1]. Left axis: closing price.</p>
+      <p className="mt-2 text-xs text-slate-400">Right axis: sentiment in [−1, 1]. Left axis: closing price.</p>
     </section>
   );
 }

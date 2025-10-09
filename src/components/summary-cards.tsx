@@ -41,21 +41,21 @@ export function SummaryCards({ s }: { s: AnalyzeSummary }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm text-green-700">Positive</CardTitle></CardHeader>
-        <CardContent className="text-2xl font-semibold">{pct(posPct)}</CardContent>
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm text-green-400">Positive</CardTitle></CardHeader>
+        <CardContent className="text-2xl font-semibold text-slate-100">{pct(posPct)}</CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm text-slate-700">Neutral</CardTitle></CardHeader>
-        <CardContent className="text-2xl font-semibold">{pct(neuPct)}</CardContent>
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm text-slate-300">Neutral</CardTitle></CardHeader>
+        <CardContent className="text-2xl font-semibold text-slate-100">{pct(neuPct)}</CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pb-2"><CardTitle className="text-sm text-red-700">Negative</CardTitle></CardHeader>
-        <CardContent className="text-2xl font-semibold">{pct(negPct)}</CardContent>
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader className="pb-2"><CardTitle className="text-sm text-red-400">Negative</CardTitle></CardHeader>
+        <CardContent className="text-2xl font-semibold text-slate-100">{pct(negPct)}</CardContent>
       </Card>
-      <Card>
-        <CardHeader className="pb-2 flex flex-row items-center gap-2"><Gauge className="h-4 w-4" /><CardTitle className="text-sm">Avg score</CardTitle></CardHeader>
-        <CardContent className="text-2xl font-semibold">{score}</CardContent>
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader className="pb-2 flex flex-row items-center gap-2"><Gauge className="h-4 w-4 text-slate-300" /><CardTitle className="text-sm text-slate-300">Avg score</CardTitle></CardHeader>
+        <CardContent className="text-2xl font-semibold text-slate-100">{score}</CardContent>
       </Card>
     </div>
   );
@@ -63,7 +63,7 @@ export function SummaryCards({ s }: { s: AnalyzeSummary }) {
 
 export function SummaryHelp() {
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-600">
+    <div className="flex items-center gap-2 text-xs text-slate-400">
       <Info className="h-3.5 w-3.5" />
       <span>Score ∈ [−1, 1]. Higher is more positive.</span>
     </div>

@@ -18,14 +18,14 @@ function timeAgo(iso: string) {
 export default function HeadlinesList({ items }: { items: Article[] }) {
   if (!items.length) {
     return (
-      <p role="status" className="text-sm text-slate-600">
+      <p role="status" className="text-sm text-slate-400">
         No articles found.
       </p>
     );
   }
 
   return (
-    <ul className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
+    <ul className="divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-900">
       {items.map((a, i) => {
         const lbl = a.sentiment?.label;
         const sc = a.sentiment?.score ?? 0;
@@ -37,7 +37,7 @@ export default function HeadlinesList({ items }: { items: Article[] }) {
                 href={a.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-slate-900 hover:text-black focus:text-black hover:underline focus:underline focus:outline-none"
+                className="font-medium text-slate-100 hover:text-white focus:text-white hover:underline focus:underline focus:outline-none"
               >
                 {a.title}
               </a>
@@ -52,7 +52,7 @@ export default function HeadlinesList({ items }: { items: Article[] }) {
               )}
             </div>
 
-            <div className="text-xs text-slate-600 flex items-center gap-2">
+            <div className="text-xs text-slate-400 flex items-center gap-2">
               <span>{a.source}</span>
               <span>•</span>
               <span>{timeAgo(a.publishedAt)}</span>
@@ -60,7 +60,7 @@ export default function HeadlinesList({ items }: { items: Article[] }) {
                 href={a.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 ml-auto text-slate-600 hover:text-slate-900"
+                className="inline-flex items-center gap-1 ml-auto text-slate-400 hover:text-slate-200"
                 aria-label="Open article"
                 title="Open article"
               >
