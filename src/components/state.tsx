@@ -53,7 +53,7 @@ export function LoadingState({ query }: { query?: string }) {
         
         {query && (
           <p className="text-sm text-slate-300 mb-4">
-            Analyzing sentiment for <span className="font-semibold text-slate-100">"{query}"</span>
+            Analyzing sentiment for <span className="font-semibold text-slate-100">&ldquo;{query}&rdquo;</span>
           </p>
         )}
         

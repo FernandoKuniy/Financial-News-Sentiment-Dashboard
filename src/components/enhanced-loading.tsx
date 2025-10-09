@@ -53,12 +53,10 @@ const loadingStages: LoadingStage[] = [
 
 interface EnhancedLoadingProps {
   query?: string;
-  currentStage?: string;
 }
 
-export function EnhancedLoading({ query, currentStage }: EnhancedLoadingProps) {
+export function EnhancedLoading({ query }: EnhancedLoadingProps) {
   const [activeStageIndex, setActiveStageIndex] = useState(0);
-  const [completedStages, setCompletedStages] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -105,7 +103,7 @@ export function EnhancedLoading({ query, currentStage }: EnhancedLoadingProps) {
           
           {query && (
             <p className="text-sm text-slate-300 mb-2">
-              Analyzing sentiment for <span className="font-semibold text-slate-100">"{query}"</span>
+              Analyzing sentiment for <span className="font-semibold text-slate-100">&ldquo;{query}&rdquo;</span>
             </p>
           )}
           
@@ -139,7 +137,6 @@ export function EnhancedLoading({ query, currentStage }: EnhancedLoadingProps) {
             const StageIcon = stage.icon;
             const isActive = index === activeStageIndex;
             const isCompleted = index < activeStageIndex;
-            const isPending = index > activeStageIndex;
             
             return (
               <div 

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const texts = parsed.data.headlines;
-    const results = await batchClassify(texts, 16);
+    const results = await batchClassify(texts);
 
     return new Response(
       JSON.stringify({ count: results.length, items: results }),

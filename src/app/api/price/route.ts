@@ -25,9 +25,6 @@ const AvDailySchema = z.object({
   "Time Series (Daily)": SeriesSchema,
 }).passthrough();
 
-function daysFromRange(r: "7d" | "14d" | "30d") {
-  return r === "7d" ? 7 : r === "14d" ? 14 : 30;
-}
 
 export async function GET(req: NextRequest) {
   try {

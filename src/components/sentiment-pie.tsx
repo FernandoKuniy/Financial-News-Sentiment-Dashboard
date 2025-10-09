@@ -5,6 +5,7 @@ import type { AnalyzeSummary } from "@/types/sentiment";
 
 const COLORS = ["#22c55e", "#64748b", "#ef4444"]; // green, gray, red
 
+
 export default function SentimentPie({ s }: { s: AnalyzeSummary }) {
   const pos = "pos" in s ? s.pos : s.positive;
   const neu = "neu" in s ? s.neu : s.neutral;
@@ -29,7 +30,6 @@ export default function SentimentPie({ s }: { s: AnalyzeSummary }) {
             cy="50%"
             outerRadius={80}
             label={({ name, percent }) => `${name} (${percent}%)`}
-            labelStyle={{ fill: "#e5e7eb", fontSize: 12 }}
           >
             {data.map((entry, idx) => (
               <Cell key={entry.name} fill={COLORS[idx]} />

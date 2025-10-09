@@ -18,7 +18,6 @@ export function mapFinBertLabel(raw: string): SentLabel {
     return "negative";
 }
 
-type OneRespItem = { label?: unknown; class_name?: unknown; score?: unknown; probability?: unknown };
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -131,7 +130,7 @@ async function pMap<T, R>(items: T[], fn: (t: T) => Promise<R>, concurrency = 6)
   return out;
 }
 
-export async function batchClassify(texts: string[], _batchSize = 16): Promise<SentItem[]> {
+export async function batchClassify(texts: string[]): Promise<SentItem[]> {
   // per-input requests with concurrency; guarantees 1:1 outputs
   return pMap(texts, (t) => classifyOne(t), 6);
 }
