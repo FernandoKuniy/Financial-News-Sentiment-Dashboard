@@ -1,4 +1,4 @@
-const HF_URL = "https://api-inference.huggingface.co/models/ProsusAI/finbert";
+const HF_URL = "https://router.huggingface.co/hf-inference/models/ProsusAI/finbert";
 
 export type SentLabel = "positive" | "neutral" | "negative";
 export type SentOK = { label: SentLabel; score: number };
