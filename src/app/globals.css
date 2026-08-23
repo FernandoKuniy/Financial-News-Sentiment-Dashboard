@@ -1,27 +1,144 @@
 @import "tailwindcss";
 
+/*
+  shadcn/ui drives every component off these variables. They were never defined in this
+  project, which meant `bg-card`, `text-muted-foreground`, `border-input` and `ring-ring` in
+  components/ui resolved to nothing, and every consumer papered over it with hardcoded
+  `bg-slate-900 border-slate-800`. Defining them here is what lets those hardcodes come off.
+
+  Zinc throughout. Colour is reserved for meaning: green for a positive headline, red for a
+  negative one, amber for a caveat, and indigo for the brand and the one non-semantic series
+  on a chart. Nothing is coloured for decoration.
+*/
+
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* 8px. shadcn derives the rest from this, and these four land on 4 / 6 / 8 / 12px, which is
+     the radius hierarchy the design uses: sm and md for inputs and small buttons, lg for
+     inline rows and tooltips, xl for cards and sections. */
+  --radius: 0.5rem;
+
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Cards are white with a border, never a tinted fill. The border does the separating. */
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+
+  /* The primary button inverts between modes: near-black on white here, white on near-black
+     in dark. There is no brand-coloured button anywhere. */
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+
+  --destructive: #dc2626;
+  --destructive-foreground: #fafafa;
+
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+
+  /* Chart series. Positive and negative match the text colours used for the same meanings, so
+     a green number and a green bar are the same green. */
+  --sentiment-positive: #16a34a;
+  --sentiment-neutral: #a1a1aa;
+  --sentiment-negative: #dc2626;
+  --chart-price: #6366f1;
+  --chart-grid: #e4e4e7;
+  --chart-axis: #71717a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+
+    --card: #0a0a0a;
+    --card-foreground: #ededed;
+    --popover: #18181b;
+    --popover-foreground: #ededed;
+
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #fafafa;
+
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #52525b;
+
+    /* One step lighter than the light-mode pair. green-600 and red-600 are too dark to read
+       as strokes against #0a0a0a. */
+    --sentiment-positive: #22c55e;
+    --sentiment-neutral: #71717a;
+    --sentiment-negative: #ef4444;
+    --chart-price: #818cf8;
+    --chart-grid: #27272a;
+    --chart-axis: #a1a1aa;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-/* Force dark theme regardless of system preference */
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  /* shadcn's components write a bare `border`, which in Tailwind v4 would fall back to
+     currentColor and paint borders in the text colour. This points it at the token. */
+  * {
+    @apply border-border;
   }
-}
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* Recharts writes its focus outline off, and its interactive surfaces are keyboard
+     reachable, so give the whole app one visible ring rather than none. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
