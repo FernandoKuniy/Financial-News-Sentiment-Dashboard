@@ -1,46 +1,87 @@
 "use client";
 
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+
 import type { AnalyzeSummary } from "@/types/sentiment";
+import { normalizeSummary } from "@/lib/sentiment";
+import { useChartColors } from "@/lib/chart-colors";
 
-const COLORS = ["#22c55e", "#64748b", "#ef4444"]; // green, gray, red
-
-
+/**
+ * The split between positive, neutral and negative.
+ *
+ * A donut rather than a filled pie, so the total sits in the middle where a reader looks first.
+ * The labels moved off the slices and into a legend underneath: slice labels on a three-part
+ * chart collide as soon as one share gets small, and they were being drawn outside the box.
+ *
+ * No tooltip. Every value is already written in the legend, so hovering could only repeat it.
+ */
 export default function SentimentPie({ s }: { s: AnalyzeSummary }) {
-  const pos = "pos" in s ? s.pos : s.positive;
-  const neu = "neu" in s ? s.neu : s.neutral;
-  const neg = "neg" in s ? s.neg : s.negative;
-  const total = pos + neu + neg || 1;
+  const n = normalizeSummary(s);
+  const colors = useChartColors();
 
-  const data = [
-    { name: "Positive", value: pos },
-    { name: "Neutral", value: neu },
-    { name: "Negative", value: neg },
-  ].map((d) => ({ ...d, percent: Math.round((d.value / total) * 100) }));
+  if (n.total === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-zinc-300 px-4 py-6 text-center text-sm text-zinc-500 dark:border-zinc-700">
+        None of these headlines came back with a score.
+      </div>
+    );
+  }
+
+  const slices = [
+    { key: "positive", label: "positive", value: n.pos, pct: n.posPct, color: colors?.positive },
+    { key: "neutral", label: "neutral", value: n.neu, pct: n.neuPct, color: colors?.neutral },
+    { key: "negative", label: "negative", value: n.neg, pct: n.negPct, color: colors?.negative },
+  ];
 
   return (
-    <div className="w-full h-64 rounded-2xl border border-slate-800 bg-slate-900 p-4">
-      <ResponsiveContainer>
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={80}
-            label={({ name, percent }) => `${name} (${percent}%)`}
-          >
-            {data.map((entry, idx) => (
-              <Cell key={entry.name} fill={COLORS[idx]} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(v: number, name) => [`${v}`, name]} 
-            contentStyle={{ backgroundColor: "#1f2937", border: "1px solid #374151", color: "#e5e7eb" }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+    <section className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+      <h2 className="text-sm font-medium">How the headlines split</h2>
+
+      <div className="relative mt-3 h-40">
+        {colors && (
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={slices}
+                dataKey="value"
+                nameKey="label"
+                cx="50%"
+                cy="50%"
+                innerRadius={48}
+                outerRadius={72}
+                paddingAngle={2}
+                stroke="none"
+                isAnimationActive={false}
+              >
+                {slices.map((slice) => (
+                  <Cell key={slice.key} fill={slice.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-2xl font-semibold tabular-nums">{n.total}</span>
+          <span className="text-xs text-zinc-500">headlines</span>
+        </div>
+      </div>
+
+      <ul className="mt-3 space-y-1.5 text-sm">
+        {slices.map((slice) => (
+          <li key={slice.key} className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="size-2 shrink-0 rounded-full"
+              style={{ background: slice.color }}
+            />
+            <span className="text-zinc-600 dark:text-zinc-400">{slice.label}</span>
+            <span className="ml-auto tabular-nums">
+              {slice.value}{" "}
+              <span className="text-zinc-500">({Math.round(slice.pct)}%)</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
